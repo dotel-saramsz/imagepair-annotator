@@ -1,0 +1,22 @@
+body {
+    background-color: beige;
+}
+
+.image-box {
+    width: 50%;
+    display: inline;
+}
+
+#image-togglers button {
+    
+}
+
+.classified {
+    background-color: green;
+    color: black;
+}
+
+.not-classified {
+    background-color: crimson;
+    color: white;
+}

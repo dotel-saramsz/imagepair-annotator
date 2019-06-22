@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    {{>header}}
+    {{!-- Linking the page specific css file --}}
+    <link href="css/home.css" rel="stylesheet">
+    {{!-- Body Content --}}
+    <body>
+        <h1>Hello There! {{value}}</h1>
+        <ul>
+            {{#each records}}
+            <li>
+                <div class="folder-card">
+                    <a href="/{{this.tiffName}}">{{this.tiffName}}</a>
+                </div>
+            </li>
+            {{/each}}
+        </ul>
+    </body>
+</html>

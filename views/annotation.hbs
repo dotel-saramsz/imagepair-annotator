@@ -1,0 +1,166 @@
+    <!DOCTYPE html>
+<html>
+    {{>header}}
+    {{!-- Linking the page specific css file --}}
+    <link href="css/annotation.css" rel="stylesheet">
+    {{!-- Body Content --}}
+    <body>
+        <h1>Demo Annotation Page for TIFF: {{tiffName}}</h1>
+        <a id="download-labels" href="{{tiffName}}/labels" target="_blank">Download latest labels</a>
+        <div id="img-details">
+            <h2>Pair Number: <span id="pair-number"></span></h2>
+            <p id="selection-info"></p>
+        </div>
+        <div id="pre-img-box" class="image-box">
+
+        </div>
+        <div id="post-img-box" class="image-box">
+            
+        </div>
+        <div id="class-selector">
+            <form id="class-selector-form" enctype="multipart/form-data">
+                <input type="radio" name="Class" value="0">Not Flooded
+                <input type="radio" name="Class" value="1">Flooded
+                <input type="radio" name="Class" value="2">Indecisive
+            </form>
+        </div>
+        <div id="image-togglers">
+            <button id="prev-btn">Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </body>
+
+    <script>
+        let displayPairNumber;
+        let imagePairs;
+        
+        let body = document.querySelector('body');
+        let prevBtn = document.getElementById('prev-btn');
+        let nextBtn = document.getElementById('next-btn');
+        let preimgBox = document.getElementById('pre-img-box');
+        let postimgBox = document.getElementById('post-img-box');
+        let form = document.getElementById('class-selector-form');
+        let pairNumInfo = document.getElementById('pair-number');
+        let selectionInfo = document.getElementById('selection-info');
+        let downloadBtn = document.getElementById('download-labels');
+
+        let tiffName = "{{tiffName}}";
+
+        //tiff class update function
+        updateClass = (displayNumber) => {
+            //TODO- Also update the 'class' and 'classified' attribute in imagePairs array element.
+            currentData = new FormData(form);
+            currentdisplayNumber = displayNumber    //so that the async function callback gets this as a parent scope
+            if (currentData.get('Class') != null && currentData.get('Class') != imagePairs[displayNumber].class) {
+                //send the XHR for update
+                let updateReq = new XMLHttpRequest();
+                updateReq.open('POST',`/${tiffName}/update`,true);
+                updateReq.addEventListener('load', (ev) => {
+                    //result obtained
+                    if(!updateReq.responseText["err"]){
+                        responseObj = JSON.parse(updateReq.responseText);
+                        console.log(responseObj);
+                        //update the imagePairs array element
+                        imagePairs[currentdisplayNumber].class = responseObj.class;
+                        imagePairs[currentdisplayNumber].classified = true
+                    }
+                    else {
+                        console.log(updateReq.responseText);
+                    }
+                });
+                updateReq.setRequestHeader('Content-Type','application/json');
+                updateReq.send(JSON.stringify({
+                    pairNumber:imagePairs[displayPairNumber].pairNumber,
+                    selectedClass:currentData.get('Class')
+                }));
+            }
+        }
+
+        //custom events;
+        let displayChangeEvent = new Event('displayChanged');
+
+        //Event Handlers for custom events
+        body.addEventListener('displayChanged', (event) => {
+            pairNumInfo.textContent = imagePairs[displayPairNumber].pairNumber;
+            if(imagePairs[displayPairNumber].classified) {
+                selectionInfo.textContent = `Classified as ${imagePairs[displayPairNumber].class}`;
+                selectionInfo.className = 'classified';
+                //TODO- set the form input to corresponding value as well
+                form.Class.value = imagePairs[displayPairNumber].class;
+            }
+            else {
+                selectionInfo.textContent = "Not yet classified";
+                selectionInfo.className = "not-classified";
+                form.reset();
+            }
+            preimgBox.innerHTML = `<img src="${imagePairs[displayPairNumber].preimg}">`;
+            postimgBox.innerHTML = `<img src="${imagePairs[displayPairNumber].postimg}">`;
+        });
+
+        prevBtn.addEventListener('click', (event) => {
+            //read form input and send XHR
+            updateClass(displayPairNumber);
+            //event dispatch and button controls
+            nextBtn.removeAttribute('disabled');
+            if(displayPairNumber == 0) {
+                prevBtn.setAttribute('disabled',true);
+            }
+            else{
+                displayPairNumber -= 1;
+                body.dispatchEvent(displayChangeEvent);
+            }
+        });
+
+        nextBtn.addEventListener('click', (event) => {
+            //read form input and send XHR
+            updateClass(displayPairNumber);
+            //event dispatch and button controls
+            prevBtn.removeAttribute('disabled');
+            if(displayPairNumber == imagePairs.length && displayPairNumber !== 0) {
+                nextBtn.setAttribute('disabled',true);
+            }
+            else{
+                displayPairNumber += 1;
+                body.dispatchEvent(displayChangeEvent);
+            }
+        });
+
+        //Key Press event listeners
+        document.addEventListener('keydown', (event) => {
+            pressedKey = event.keyCode;
+            //if 0 was pressed, select Not Flooded
+            if(pressedKey == 45 || pressedKey == 48) {
+                form.Class.value = "0";
+            }
+            //if 1 was pressed, select Flooded
+            else if(pressedKey == 35 || pressedKey == 49) {
+                form.Class.value = "1";
+            }
+            //if 2 was pressed, select Indecisive
+            else if(pressedKey == 40 || pressedKey == 50) {
+                form.Class.value = "2";
+            }
+            //if left arrow was pressed, trigger prevBtn.click()
+            else if(pressedKey == 37) {
+                prevBtn.click();
+            }
+            //if right arrow was pressed, trigger nextBtn.click()
+            else if(pressedKey == 39) {
+                nextBtn.click();
+            }
+        });
+
+        //Download button event handler
+        
+
+        //send XHR to /<tiffName>/images and get the list of all the imagePairs
+        let req = new XMLHttpRequest();
+        req.open('GET',`/${tiffName}/images`,true);
+        req.addEventListener('load',(event) => {
+            imagePairs = JSON.parse(req.responseText);
+            displayPairNumber = 0;
+            body.dispatchEvent(displayChangeEvent);
+        });
+        req.send();
+    </script>
+</html>
