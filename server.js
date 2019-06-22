@@ -3,8 +3,9 @@ const config = require('./config');
 const bodyParser = require('body-parser');
 const hbs = require('hbs');
 const homeRenderer = require('./renderers/home');
-const imageFetcher = require('./renderers/getImagePairs');
+const imageFetcher = require('./renderers/imageFetcher');
 const classUpdater =  require('./renderers/classUpdater');
+const labelServer = require('./renderers/labelServer');
 
 const app = express();
 
@@ -31,6 +32,10 @@ app.get('/:tiffName',(req,res) => {
 app.get('/:tiffName/images',(req,res) => {
     imageFetcher.fetch(req,res);
 });
+
+app.get('/:tiffName/labels',(req,res) => {
+    labelServer.serve(req,res);
+})
 
 app.post('/:tiffName/update',(req,res) => {
     //TODO- After getting the pairNumber and selectedClass values, update the database accordingly
