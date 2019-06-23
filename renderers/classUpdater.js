@@ -5,7 +5,7 @@ const config = require('../config');
 const update = (req,res) => {
     updateInfo = req.body;
     models.ImagePair.findOneAndUpdate(
-        {pairNumber:req.body.pairNumber},
+        {tiffName: req.params.tiffName, pairNumber:req.body.pairNumber},
         {
             $set: {
                 class: req.body.selectedClass,
@@ -14,7 +14,7 @@ const update = (req,res) => {
         },
         { new: true})
         .then((doc) => {
-            console.log(doc);
+            //console.log(doc);
             res.send(doc);
         })
         .catch((err) => {

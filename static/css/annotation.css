@@ -1,14 +1,12 @@
 body {
     background-color: beige;
 }
-
+h2 {
+    display: inline;
+}
 .image-box {
     width: 50%;
     display: inline;
-}
-
-#image-togglers button {
-    
 }
 
 .classified {
@@ -19,4 +17,9 @@ body {
 .not-classified {
     background-color: crimson;
     color: white;
+}
+
+label {
+    color: black;
+    margin-left: 8%;
 }

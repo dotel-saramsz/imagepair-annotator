@@ -4,12 +4,15 @@ const fs = require('fs');
 const config = require('../config');
 
 
-const executeLogic = (req,res,records) => {
-    console.log('This was retreived from the database: ');
-    console.log(records);
+const executeLogic = async (req,res,records) => {
+    let details = await Promise.all(records.map( async (record) => {
+        let total =  await models.ImagePair.countDocuments({tiffName: record.tiffName});
+        let classified = await models.ImagePair.countDocuments({tiffName: record.tiffName,classified: true});
+        return {total: total, classified:classified, percentage: 100*classified/total, record: record};
+    }));
     res.render('home.hbs',{
-        value:'Gole',
-        records: records});
+        details: details,
+    });
 }
 
 const render = (req,res) => {

@@ -5,15 +5,43 @@
     <link href="css/home.css" rel="stylesheet">
     {{!-- Body Content --}}
     <body>
-        <h1>Hello There! {{value}}</h1>
-        <ul>
-            {{#each records}}
-            <li>
-                <div class="folder-card">
-                    <a href="/{{this.tiffName}}">{{this.tiffName}}</a>
+        <div class="navbar-fixed">
+            <nav class="blue accent-3">
+                <div class="nav-wrapper">
+                    <span class="brand-logo center">Image Pair Annotator</span>
                 </div>
-            </li>
-            {{/each}}
-        </ul>
+            </nav>
+        </div>
+        <div class="row">
+            <div class="container">
+                <p> </p>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                {{#each details}}
+                <div class="col s4">
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="images/caardbg.jpg">
+                            <a href="/{{this.record.tiffName}}" class="btn-floating btn-large halfway-fab waves-effect waves-light blue accent-3">
+                                <i class="material-icons">create</i>
+                            </a>
+                        </div>
+                        <div class="card-content red lighten-5">
+                            <h4>TIFF {{this.record.tiffName}}</h4>
+                            <p><strong>{{this.classified}}</strong> out of <strong>{{this.total}}</strong> annotated</p>
+                            <div class="progress">
+                                <div class="determinate blue accent-3" style="width: {{this.percentage}}%"></div>
+                            </div>
+                        </div>
+                        {{!-- <div class="card-action">
+                            <a href="/{{this.tiffName}}" class="btn waves-effect green darken-2">Start Annotation</a>
+                        </div> --}}
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
     </body>
 </html>

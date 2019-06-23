@@ -1,33 +1,96 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
     {{>header}}
     {{!-- Linking the page specific css file --}}
     <link href="css/annotation.css" rel="stylesheet">
     {{!-- Body Content --}}
     <body>
-        <h1>Demo Annotation Page for TIFF: {{tiffName}}</h1>
-        <a id="download-labels" href="{{tiffName}}/labels" target="_blank">Download latest labels</a>
-        <div id="img-details">
-            <h2>Pair Number: <span id="pair-number"></span></h2>
-            <p id="selection-info"></p>
+        <div class="navbar-fixed">
+            <nav class="blue accent-3">
+                <div class="nav-wrapper">
+                    <span class="brand-logo center">Image Pair Annotator</span>
+                    <ul id="nav-mobile" class="left hide-on-med-and-down">
+                        <li><a href="/"><i class="material-icons">home</i></a></li>
+                    </ul>
+                </div>
+            </nav>
         </div>
-        <div id="pre-img-box" class="image-box">
+        <div class="container">
+            <div class="row">
+                <div class="col s8">
+                    <h4>Annotation for TIFF {{tiffName}}</h4>
+                </div>
+                <div class="col s4">
+                    <br>
+                    <a id="download-labels" class="bottom waves-effect waves-light btn blue accent-3" href="{{tiffName}}/labels" target="_blank">
+                        <i class="material-icons left">cloud_download</i> Download latest labels
+                    </a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s3">
+                    <div id="selection-box" class="card green darken-1">
+                        <div class="card-content white-text">
+                            <p id="selection-info" class="card-title">
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s9">
+                    <div id="img-details">
+                        <p class="left">Pair Number: <strong id="pair-number"></strong></p>
+                        <p class="right" id="remainder-info"></p>
+                        <br>
+                        <div class="progress">
+                            <div id="progress-bar" class="determinate blue accent-3" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s2 image-togglers">
+                    <br><br><br><br><br>
+                    <button class="left btn-floating btn-large waves-effect waves-light blue accent-3" id="prev-btn">
+                        <i class="material-icons">keyboard_arrow_left</i>
+                    </button>
+                </div>
+                <div class="col s4 center-align">
+                    <span class="center">PRE</span>
+                    <div id="pre-img-box" >
+                    </div>
+                </div>
+                <div class="col s4 center-align">
+                    <span class="center">POST</span>
+                    <div id="post-img-box" >                    
+                    </div>
+                </div>
+                <div class="col s2 image-togglers ">
+                    <br><br><br><br><br>
+                    <button class="right btn-floating btn-large waves-effect waves-light right blue accent-3" id="next-btn">
+                        <i class="material-icons">keyboard_arrow_right</i>
+                    </button>
+                </div>
+            </div>
+            <div class="row">
+                <div id="class-selector" class="col s6 offset-s3">
+                    <form class="form center" id="class-selector-form" enctype="multipart/form-data">
+                        <label>
+                            <input name="Class" type="radio" value="0" />
+                            <span>Not Flooded</span>
+                        </label>
+                        <label>
+                            <input name="Class" type="radio" value="1" />
+                            <span>Flooded</span>
+                        </label>
+                        <label>
+                            <input name="Class" type="radio" value="2" />
+                            <span>Indecisive</span>
+                        </label>
+                    </form>
+                </div>            
+            </div>
+        </div>
 
-        </div>
-        <div id="post-img-box" class="image-box">
-            
-        </div>
-        <div id="class-selector">
-            <form id="class-selector-form" enctype="multipart/form-data">
-                <input type="radio" name="Class" value="0">Not Flooded
-                <input type="radio" name="Class" value="1">Flooded
-                <input type="radio" name="Class" value="2">Indecisive
-            </form>
-        </div>
-        <div id="image-togglers">
-            <button id="prev-btn">Previous</button>
-            <button id="next-btn">Next</button>
-        </div>
     </body>
 
     <script>
@@ -42,6 +105,9 @@
         let form = document.getElementById('class-selector-form');
         let pairNumInfo = document.getElementById('pair-number');
         let selectionInfo = document.getElementById('selection-info');
+        let selectionBox = document.getElementById('selection-box');
+        let remainderInfo = document.getElementById('remainder-info');
+        let progressBar = document.getElementById('progress-bar');
         let downloadBtn = document.getElementById('download-labels');
 
         let tiffName = "{{tiffName}}";
@@ -54,7 +120,7 @@
             if (currentData.get('Class') != null && currentData.get('Class') != imagePairs[displayNumber].class) {
                 //send the XHR for update
                 let updateReq = new XMLHttpRequest();
-                updateReq.open('POST',`/${tiffName}/update`,true);
+                updateReq.open('POST',`/${tiffName}/update`,false);
                 updateReq.addEventListener('load', (ev) => {
                     //result obtained
                     if(!updateReq.responseText["err"]){
@@ -82,15 +148,21 @@
         //Event Handlers for custom events
         body.addEventListener('displayChanged', (event) => {
             pairNumInfo.textContent = imagePairs[displayPairNumber].pairNumber;
+            let classifiedCount = imagePairs.filter((each) => each.classified == true).length;
+            let remaining = imagePairs.length - classifiedCount;
+            remainderInfo.textContent = `${remaining} out of ${imagePairs.length} remaining`;
+            let percentage = 100*classifiedCount/imagePairs.length;
+            progressBar.style.width = `${percentage}%`;
             if(imagePairs[displayPairNumber].classified) {
                 selectionInfo.textContent = `Classified as ${imagePairs[displayPairNumber].class}`;
-                selectionInfo.className = 'classified';
-                //TODO- set the form input to corresponding value as well
+                selectionBox.classList.remove("red");
+                selectionBox.classList.add("green");
                 form.Class.value = imagePairs[displayPairNumber].class;
             }
             else {
-                selectionInfo.textContent = "Not yet classified";
-                selectionInfo.className = "not-classified";
+                selectionInfo.textContent = "Not Classified";
+                selectionBox.classList.remove("green");
+                selectionBox.classList.add("red");
                 form.reset();
             }
             preimgBox.innerHTML = `<img src="${imagePairs[displayPairNumber].preimg}">`;
@@ -129,15 +201,15 @@
         document.addEventListener('keydown', (event) => {
             pressedKey = event.keyCode;
             //if 0 was pressed, select Not Flooded
-            if(pressedKey == 45 || pressedKey == 48) {
+            if(pressedKey == 96 || pressedKey == 48) {
                 form.Class.value = "0";
             }
             //if 1 was pressed, select Flooded
-            else if(pressedKey == 35 || pressedKey == 49) {
+            else if(pressedKey == 97 || pressedKey == 49) {
                 form.Class.value = "1";
             }
             //if 2 was pressed, select Indecisive
-            else if(pressedKey == 40 || pressedKey == 50) {
+            else if(pressedKey == 98 || pressedKey == 50) {
                 form.Class.value = "2";
             }
             //if left arrow was pressed, trigger prevBtn.click()
